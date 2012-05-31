@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from collections import defaultdict
 
 from django import forms
 from django.contrib.auth.decorators import login_required
@@ -18,6 +19,10 @@ class JSTree(object):
     add_node_form = None
     move_node_form = None
     maxdepth = 3
+    parent_map = defaultdict(list)
+    id_field_name = 'id'
+    parent_field_name = 'parent_id'
+    title_field_name = 'name'
 
     def get_urls(self):
         from django.conf.urls import patterns, url, include
@@ -34,47 +39,58 @@ class JSTree(object):
     def urls(self):
         return self.get_urls(), 'jstree', 'jstree'
 
+    def _render(self, items):
+        self.items = items
+        self.result = []
+        for item in self.items:
+            self.parent_map[self._get(item, self.parent_field_name)].\
+                append(self._get(item, self.id_field_name))
+        return list(self._tree_level())
+
+    def _get(self, item, attr):
+        if hasattr(item, attr):
+            return getattr(item, attr)
+        if type(item) == dict:
+            return item.get(attr)
+        return None
+
+    def _get_children(self, node):
+        if node:
+            node = self._get(node, 'id')
+        if node in self.parent_map:
+            return [item for item in self.items if self._get(item, 'id') in self.parent_map[node]]
+        return []
+
+    def _tree_level(self, parent=None):
+        for node in self._get_children(parent):
+            yield self.get_node_jstree(node)
+
+    def get_queryset(self):
+        return self.queryset.values('id', 'parent_id', 'name', 'visible')
+
     def get_jstree(self):
         """
         Вход в дерево
         """
         if not self.queryset:
             return []
-        root_nodes = self.queryset.filter(parent__isnull=True)
-        ret = []
-        for node in root_nodes:
-            ret.append(self.get_node_jstree(node))
-        return ret
+        tree = self._render(self.get_queryset())
+        return tree
 
-    def get_node_jstree(self, node, **kwargs):
-        """
-        Рекурсивная функция отрисовки элементов дерева
-        """
-        maxdepth = kwargs.get('maxdepth', 1)
-        ret, kwargs = self.get_node_data(node, **kwargs)
-        if not node.visible:
-            ret['attr']['class'] = 'jstree-hidden'
-        if maxdepth >= 0 or maxdepth is None:
-            queryset = node.get_children()
-            children = []
-            for child in queryset:
-                children.append(self.get_node_jstree(child, **kwargs))
-            ret['children'] = children
-        elif node.is_leaf_node():
-            ret['children'] = []
-        else:
-            ret['state'] = 'closed'
-        return ret
+    def get_node_jstree(self, node):
+        node_data = self.get_node_data(node)
+        node_data['children'] = list(self._tree_level(node))
+        return node_data
 
-    def get_node_data(self, node, **kwargs):
+    def get_node_data(self, node):
         """
         Возвращает jstree совместимую структуры элемента дерева
         """
         return {
-            'data': {'title': node.name},
-            'metadata': {'node_id': node.id, 'visible': node.visible},
-            'attr': {'id': 'n%d' % node.id},
-        }, kwargs
+            'data': {'title': self._get(node, 'name')},
+            'metadata': {'node_id': self._get(node, 'id'), 'visible': self._get(node, 'visible')},
+            'attr': {'id': 'n%d' % self._get(node, 'id')},
+        }
 
     def get_treeform_class(self):
         """
@@ -164,11 +180,7 @@ class JSTree(object):
     @method_decorator(require_POST)
     def remove_node(self, request):
         status, resp = 200, {}
-        """ удалить узел, при этом перетащив всех его потомков в родительский узел """
         item = get_object_or_404(self.queryset.model, pk=request.POST.get('node'))
-        for child in item.get_children():
-            child.parent = item.parent
-            child.save()
         item.delete()
         return JsonateResponse(resp, status=status)
 
@@ -176,7 +188,6 @@ class JSTree(object):
     @method_decorator(require_POST)
     def toggle_node(self, request, oper):
         status, resp = 200, {}
-        """ удалить узел, при этом перетащив всех его потомков в родительский узел """
         item = get_object_or_404(self.queryset.model, pk=request.POST.get('node'))
         item.visible = (oper == 'show')
         item.save()

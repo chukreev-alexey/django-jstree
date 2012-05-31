@@ -39,7 +39,7 @@ $(function(){
       return this;
     },
     load_tree: function(e, data){
-      data.inst.open_all();
+      //data.inst.open_all();
     },
     select_node: function(e, node){},
     move_node: function(e, data){
