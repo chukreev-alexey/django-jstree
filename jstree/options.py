@@ -19,7 +19,6 @@ class JSTree(object):
     add_node_form = None
     move_node_form = None
     maxdepth = 3
-    parent_map = defaultdict(list)
     id_field_name = 'id'
     parent_field_name = 'parent_id'
     title_field_name = 'name'
@@ -42,9 +41,13 @@ class JSTree(object):
     def _render(self, items):
         self.items = items
         self.result = []
+        self.parent_map = defaultdict(list)
         for item in self.items:
             self.parent_map[self._get(item, self.parent_field_name)].\
                 append(self._get(item, self.id_field_name))
+        #for k, v in self.parent_map.items():
+        #    print k, v
+        #    print '-------------------'
         return list(self._tree_level())
 
     def _get(self, item, attr):
