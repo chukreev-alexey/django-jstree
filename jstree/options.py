@@ -89,10 +89,13 @@ class JSTree(object):
         """
         Возвращает jstree совместимую структуры элемента дерева
         """
+        attr = {'id': 'n%d' % self._get(node, 'id')}
+        if not self._get(node, 'visible'):
+            attr['class'] = 'jstree-hidden'
         return {
             'data': {'title': self._get(node, 'name')},
             'metadata': {'node_id': self._get(node, 'id'), 'visible': self._get(node, 'visible')},
-            'attr': {'id': 'n%d' % self._get(node, 'id')},
+            'attr': attr,
         }
 
     def get_treeform_class(self):
