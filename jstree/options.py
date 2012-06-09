@@ -176,6 +176,7 @@ class JSTree(object):
             position = form.cleaned_data['position']
             try:
                 node.move_to(target, position=position)
+                node.save()
             except (InvalidMove, ValueError), e:
                 status, resp = 400, {'error': unicode(e)}
         else:
