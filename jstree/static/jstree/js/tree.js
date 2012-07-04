@@ -32,6 +32,10 @@ $(function(){
         },
         core: {strings: { loading: "Загрузка...", new_node: NEW_ITEM }},
         ui: { select_limit: 1 },
+        "themes" : {
+            "theme" : "default",
+            "url": "/static/jstree/themes/default/style.css"
+        },
         plugins: this.options.plugins ? this.options.plugins : ["themes", "json_data", "dnd", "crrm", "ui", "cookies"]
       };
       this.$el.jstree(jstree_options);
