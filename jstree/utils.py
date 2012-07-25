@@ -10,6 +10,7 @@ class TreeAsDict(object):
     def __init__(self, items):
         self.items = items
         self.result = []
+        self.parent_map = {}
         for item in self.items:
             self.parent_map[self.get(item, self.parent_field_name)].\
                 append(self.get(item, self.id_field_name))
