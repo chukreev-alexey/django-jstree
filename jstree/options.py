@@ -22,6 +22,7 @@ class JSTree(object):
     id_field_name = 'id'
     parent_field_name = 'parent_id'
     title_field_name = 'name'
+    parent_map = {}
 
     def get_urls(self):
         from django.conf.urls import patterns, url, include
