@@ -46,9 +46,6 @@ class JSTree(object):
         for item in self.items:
             self.parent_map[self._get(item, self.parent_field_name)].\
                 append(self._get(item, self.id_field_name))
-        #for k, v in self.parent_map.items():
-        #    print k, v
-        #    print '-------------------'
         return list(self._tree_level())
 
     def _get(self, item, attr):
