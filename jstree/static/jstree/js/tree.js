@@ -71,7 +71,8 @@ $(function(){
           'name': data.rslt.name,
           'parent': parentId
         },
-        li = data.rslt.obj;
+        li = data.rslt.obj,
+        self = this;
       $.ajax({
         async: false,
         url: this.urlRoot + 'add_node/',
@@ -85,10 +86,12 @@ $(function(){
         });
         li.data(resp.metadata);
       })
-      .fail(function(){
+      .fail(function(resp){
         $.jstree.rollback(data.rlbk);
+        self.create_node_error(resp);
       });
     },
+    create_node_error: function(resp){},
     hover: function(e, data){},
     hide_show_node: function(e){
       e.stopPropagation();
