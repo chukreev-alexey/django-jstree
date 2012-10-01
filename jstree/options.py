@@ -165,6 +165,7 @@ class JSTree(object):
     @method_decorator(login_required)
     @method_decorator(require_POST)
     def move_node(self, request):
+        from mptt.exceptions import InvalidMove
         status, resp = 200, {}
         form_class = self.get_move_node_form_class()
         form = form_class(request.POST)
